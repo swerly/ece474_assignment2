@@ -9,7 +9,7 @@ Seth Werly
 
 Compile using gcc in unix or WSL or whatever else you want I don't care.
 
-gcc dpgen.c parser.c -o dpgen
+gcc *.c -o dpgen
 
 Then run using
 
@@ -18,4 +18,4 @@ Then run using
 
 If using VisualStudio, add this to the top of the files:
 
-#define _CRT_SECURE_NO_WARNINGS
+\#define _CRT_SECURE_NO_WARNINGS
