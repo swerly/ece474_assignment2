@@ -1,3 +1,6 @@
+#ifndef LISTS_H
+#define LISTS_H
+
 //Structure for each variable/node in our list
 typedef struct node{
     int isSigned;
@@ -17,3 +20,5 @@ typedef struct{
 void addToList(varNode* list, varNode* varToAdd);
 //other functions as needed
 //searching for name, etc
+
+#endif

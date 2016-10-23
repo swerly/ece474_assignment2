@@ -3,17 +3,20 @@
 #include <string.h>
 
 #include "parser.h"
+#include "lists.h"
 
 #define INPUT "input"
 #define OUTPUT "output"
 #define WIRE "wire"
+#define REGISTER "register"
 
-void parseInputLine(FILE* out, char* inputLine);
-void parseOutputLine(FILE* out, char* outputLine);
-void parseWireLine(FILE* out, char* wireLine);
-void parseCircuitComponent(FILE* out, char* componentLine);
+void parseInputLine(varNode* list, char* inputLine);
+void parseOutputLine(varNode* list, char* outputLine);
+void parseWireLine(varNode* list, char* wireLine);
+void parseRegisterLine(varNode* list, char* registerLine);
+void parseCircuitComponent( listContainer* lists, char* componentLine);
 
-void beginParsingLine(char* line, FILE* verilogOut) {
+void beginParsingLine(listContainer* lists, char* line) {
 	char* token;
 	char* commentCheck;
 
@@ -48,20 +51,24 @@ void beginParsingLine(char* line, FILE* verilogOut) {
 	while (token != NULL) {
 		//check what we need to do with the current line
 		if (strcmp(token, INPUT) == 0){
-			parseInputLine(verilogOut, line);
+			parseInputLine(lists->inputHead, line);
 			return;
 		}
 		else if (strcmp(token, OUTPUT) == 0) {
-			parseOutputLine(verilogOut, line);
+			parseOutputLine(lists->outputHead, line);
 			return;
 		}
 		else if (strcmp(token, WIRE) == 0) {
-			parseWireLine(verilogOut, line);
+			parseWireLine(lists->wireHead, line);
 			return;
 		}
+        else if (strcmp(token, REGISTER) == 0) {
+            parseRegisterLine(lists->regHead, line);
+            return;
+        }
 		else {
 			//else we are past the inputs and outputs and we need to start handling the actual circuit
-			parseCircuitComponent(verilogOut, line);
+			parseCircuitComponent(lists, line);
 			return;
 		}
 
@@ -75,7 +82,8 @@ void beginParsingLine(char* line, FILE* verilogOut) {
 }
 
 //TODO: FILL OUT THESE METHODS
-void parseInputLine(FILE* out, char* inputLine){fprintf(out, "INPUT\n");}
-void parseOutputLine(FILE* out, char* outputLine){fprintf(out, "OUTPUT\n");}
-void parseWireLine(FILE* out, char* wireLine){fprintf(out, "WIRE\n");}
-void parseCircuitComponent(FILE* out, char* componentLine){fprintf(out, "COMPONENT\n");}
+void parseInputLine(varNode* list, char* inputLine) {  }
+void parseOutputLine(varNode* list, char* outputLine){  }
+void parseWireLine(varNode* list, char* wireLine){ }
+void parseRegisterLine(varNode* list, char* registerLine){  }
+void parseCircuitComponent(listContainer* lists, char* componentLine){  }

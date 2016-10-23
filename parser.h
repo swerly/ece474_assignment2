@@ -1,1 +1,7 @@
-void beginParsingLine(char* parse, FILE* verilogOut);
+#ifndef PARSER_H
+#define PARSER_H
+#include "lists.h"
+
+void beginParsingLine(listContainer* lists, char* parse);
+
+#endif 
