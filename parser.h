@@ -1,0 +1,1 @@
+void beginParsingLine(char* parse, FILE* verilogOut);

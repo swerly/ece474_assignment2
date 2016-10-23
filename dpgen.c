@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "parser.h"
+
+
 #define LINE_SIZE 80
 
 int main(int argc, char** argv){
@@ -31,9 +34,8 @@ int main(int argc, char** argv){
     //start scanning line by line
     while(fgets(currentLine, LINE_SIZE, netlistIn)){
         //do things with the current line
-        
-        //have some method to grab current word, as everything is separated by a space
-        //then do some nested switch shit to figure out what to do with it
+        // printf("%s\n", currentLine);
+        beginParsingLine(currentLine, verilogOut);
     }
     
     
