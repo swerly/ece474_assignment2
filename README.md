@@ -14,3 +14,8 @@ gcc dpgen.c parser.c -o dpgen
 Then run using
 
 ./dpgen inputNetlist.txt outputVerilog.v
+
+
+If using VisualStudio, add this to the top of the files:
+
+#define _CRT_SECURE_NO_WARNINGS
