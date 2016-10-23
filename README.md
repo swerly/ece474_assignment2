@@ -9,7 +9,7 @@ Seth Werly
 
 Compile using gcc in unix or WSL or whatever else you want I don't care.
 
-gcc dpgen.c -o dpgen
+gcc dpgen.c parser.c -o dpgen
 
 Then run using
 
