@@ -4,6 +4,7 @@
 
 #include "parser.h"
 #include "lists.h"
+#include "fileWriter.h"
 
 #define INPUT "input"
 #define OUTPUT "output"
@@ -66,6 +67,10 @@ void beginParsingLine(listContainer* lists, char* line) {
 			return;
 		}
 		else {
+			if (!lists->headerAndVarsWritten) {
+				writeHeaderAndVars(*lists);
+				lists->headerAndVarsWritten = 1;
+			}
 			//else we are past the inputs and outputs and we need to start handling the actual circuit
 			parseCircuitComponent(lists, line);
 			return;
