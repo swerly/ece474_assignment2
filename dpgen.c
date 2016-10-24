@@ -10,12 +10,15 @@
 int main(int argc, char** argv){
     FILE *netlistIn;
     char currentLine[LINE_SIZE];
+    int printedHeaderAndVars = 0;
     
     listContainer lists = {
         .inputHead = NULL,
         .outputHead = NULL,
         .regHead = NULL,
-        .wireHead = NULL
+        .wireHead = NULL,
+        .headerAndVarsWritten = 0,
+        .filename = argv[2]
     };
     
     //check for correct argument count
@@ -35,8 +38,6 @@ int main(int argc, char** argv){
     
     //start scanning line by line
     while(fgets(currentLine, LINE_SIZE, netlistIn)){
-        //do things with the current line
-        // printf("%s\n", currentLine);
         beginParsingLine(&lists, currentLine);
     }
     

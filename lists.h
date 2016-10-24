@@ -15,6 +15,9 @@ typedef struct{
     varNode* outputHead;
     varNode* regHead;
     varNode* wireHead;
+    //0 if header/vars havent been printed, 1 if they have
+    int headerAndVarsWritten;
+    char* filename;
 } listContainer;
 
 void addToList(varNode** list, varNode* varToAdd);
