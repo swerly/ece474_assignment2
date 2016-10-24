@@ -17,8 +17,11 @@ typedef struct{
     varNode* wireHead;
 } listContainer;
 
-void addToList(varNode* list, varNode* varToAdd);
+void addToList(varNode** list, varNode* varToAdd);
 //other functions as needed
 //searching for name, etc
 
+void printList(varNode* head);
+int containsVar(varNode* head, char* name);
+void freeList(varNode* head);
 #endif

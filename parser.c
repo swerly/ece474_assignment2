@@ -10,11 +10,10 @@
 #define WIRE "wire"
 #define REGISTER "register"
 
-void parseInputLine(varNode* list, char* inputLine);
-void parseOutputLine(varNode* list, char* outputLine);
-void parseWireLine(varNode* list, char* wireLine);
-void parseRegisterLine(varNode* list, char* registerLine);
-void parseCircuitComponent( listContainer* lists, char* componentLine);
+int getWidth(char* token);
+int isDataType(char* token);
+void parseInputLine(varNode** list, char* inputLine);
+void parseCircuitComponent(listContainer* lists, char* componentLine);
 
 void beginParsingLine(listContainer* lists, char* line) {
 	char* token;
@@ -50,40 +49,87 @@ void beginParsingLine(listContainer* lists, char* line) {
 	//while our current token isn't NULL
 	while (token != NULL) {
 		//check what we need to do with the current line
-		if (strcmp(token, INPUT) == 0){
-			parseInputLine(lists->inputHead, line);
+		if (strcmp(token, INPUT) == 0) {
+			parseInputLine(&(lists->inputHead), line);
 			return;
 		}
 		else if (strcmp(token, OUTPUT) == 0) {
-			parseOutputLine(lists->outputHead, line);
+			parseInputLine(&(lists->outputHead), line);
 			return;
 		}
 		else if (strcmp(token, WIRE) == 0) {
-			parseWireLine(lists->wireHead, line);
+			parseInputLine(&(lists->wireHead), line);
 			return;
 		}
-        else if (strcmp(token, REGISTER) == 0) {
-            parseRegisterLine(lists->regHead, line);
-            return;
-        }
+		else if (strcmp(token, REGISTER) == 0) {
+			parseInputLine(&(lists->regHead), line);
+			return;
+		}
 		else {
 			//else we are past the inputs and outputs and we need to start handling the actual circuit
 			parseCircuitComponent(lists, line);
 			return;
 		}
 
-        
+
 		token = strtok(NULL, " \t\n");
-    }
-    
-    //we are done with all the tokens in the string
-    return;
-    //}
+	}
+
+	//we are done with all the tokens in the string
+	return;
+	//}
+}
+
+int getWidth(char* token) {
+	switch (token[strlen(token) - 1]) {
+	case '1':
+		return 1;
+	case '2':
+		return (token[strlen(token) - 2] == '3') ? 32 : 2;
+	case '4':
+		return 64;
+	case '6':
+		return 16;
+	case '8':
+		return 8;
+	default:
+		return -1;
+	}
+}
+
+int isDataType(char* token) {
+	return (strncmp(token, "Int", 3) == 0) || (strncmp(token, "UIn", 3) == 0);
 }
 
 //TODO: FILL OUT THESE METHODS
-void parseInputLine(varNode* list, char* inputLine) {  }
-void parseOutputLine(varNode* list, char* outputLine){  }
-void parseWireLine(varNode* list, char* wireLine){ }
-void parseRegisterLine(varNode* list, char* registerLine){  }
+void parseInputLine(varNode** list, char* inputLine) {
+	varNode* tempVar;
+	char* token = strtok(NULL, " ,\t\n");
+	int currentIsSigned = -1;
+	int currentWidth = -1;
+	char* tempName;
+
+	//while we are still pulling things from the line
+	while (token != NULL) {
+		//if we need to set the initial attributes
+		if (isDataType(token)) {
+			//set attributes based on dataType token
+			currentIsSigned = (token[0] == 'I') ? 1 : 0;
+			currentWidth = getWidth(token);
+		}
+		else {
+			//make a new node and add it to the list
+			tempVar = (varNode*)malloc(sizeof(varNode));
+			tempVar->isSigned = currentIsSigned;
+			tempName = (char*)malloc(sizeof(char)*strlen(token));
+			strcpy(tempName, token);
+			tempVar->name = tempName;
+			tempVar->width = currentWidth;
+			tempVar->next = NULL;
+			addToList(list, tempVar);
+		}
+		token = strtok(NULL, " ,\t\n");
+	}
+}
+
 void parseCircuitComponent(listContainer* lists, char* componentLine){  }
