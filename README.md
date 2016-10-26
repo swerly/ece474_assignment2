@@ -7,15 +7,16 @@ Seth Werly
 
 
 
-Compile using gcc in unix or WSL or whatever else you want I don't care.
+Compile using cmake: (from top level directory)
 
-gcc *.c -o dpgen
+mkdir build
 
-Then run using
+cd build
 
-./dpgen inputNetlist.txt outputVerilog.v
+cmake ..
 
+make
 
-If using VisualStudio, add this to the top of the files:
+(you now need to move the inpu files into the build dir)
 
-\#define _CRT_SECURE_NO_WARNINGS
+./src/dpgen input.txt output.v
