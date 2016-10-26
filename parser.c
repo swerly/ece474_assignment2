@@ -10,11 +10,19 @@
 #define OUTPUT "output"
 #define WIRE "wire"
 #define REGISTER "register"
+#define COMP 5
+#define MUX 6
+#define MULT 7
 
 int getWidth(char* token);
 int isDataType(char* token);
 void parseInputLine(varNode** list, char* inputLine);
 void parseCircuitComponent(listContainer* lists, char* componentLine);
+
+char* searchFor(varNode* node, char* token);
+char* checkForOut(listContainer* lists, char* token);
+char* checkForIn(listContainer* lists, char* token);
+int checkWidth(listContainer* lists, char* token);
 
 void beginParsingLine(listContainer* lists, char* line) {
 	char* token;
@@ -85,6 +93,13 @@ void beginParsingLine(listContainer* lists, char* line) {
 	//}
 }
 
+void endPrint(listContainer lists)
+{
+	printEndMod(lists);
+
+	return;
+}
+
 int getWidth(char* token) {
 	switch (token[strlen(token) - 1]) {
 	case '1':
@@ -106,7 +121,6 @@ int isDataType(char* token) {
 	return (strncmp(token, "Int", 3) == 0) || (strncmp(token, "UIn", 3) == 0);
 }
 
-//TODO: FILL OUT THESE METHODS
 void parseInputLine(varNode** list, char* inputLine) {
 	varNode* tempVar;
 	char* token = strtok(NULL, " ,\t\n");
@@ -137,4 +151,278 @@ void parseInputLine(varNode** list, char* inputLine) {
 	}
 }
 
-void parseCircuitComponent(listContainer* lists, char* componentLine){  }
+void parseCircuitComponent(listContainer* lists, char* componentLine)
+{
+	varNode* node = NULL;
+	int currop = -1;														//this variable denotes what the current operation being performed is. -1 = invalid, 0 = reg, 1 = add, 2 = sub, 3 = shiftr,
+																			//4 = shiftl, 5-7 = comp, 8 = mux, 9 = mul
+	int errorCode = -1;														//error code to be transmitted to the printer, will correspond to the type of invalid input, -1 means no error
+	int opFound = 0;														//indicates if the operation has been found which determines if the operation is a register or not
+	char* token;															//creates a token string for first string before the whitespace
+	char* out = NULL;														//temporary strings created to hold a name prior to printing
+	char* in1 = NULL;
+	char* in2 = NULL;
+	char* in3 = NULL;
+	int width = 0;
+
+	int loopCount = 0;														//keeps track of the position in the loop for printing purposes
+	int validCheck = 1;														//the line is valid unless the parsing finds an invalid character in which case this flag goes low
+
+	token = componentLine;
+
+	while(token != NULL && validCheck == 1)
+	{
+		if((*token > 64 && *token < 90) || (*token > 96 && *token < 123))	//if the ascii value of the first character falls into these catagories then it isnt an operation
+		{																	//works under the assumption that verilog can only have variables that start with a letter and special characters aren't 
+																			//alowed for the first character. (ex. _var1, 1var2, /var3, %var4, etc are not acceptable)
+			if (loopCount == 0)
+			{
+				out = checkForOut(lists, token);							//checks wires, outputs, and regs
+				if (out == NULL)											//if out is still NULL then the output/register/wire couldnt be found
+				{
+					validCheck = 0;
+					errorCode = 102;										//error code 102 corresponds to output/register/wire not found
+					break;
+				}
+				else
+				{
+					width = checkWidth(lists, token);
+				}
+			}
+			else if(loopCount == 2)
+			{
+				in1 = checkForIn(lists, token);
+				if (in1 == NULL)
+				{
+					validCheck = 0;
+					errorCode = 103;										//103 implies that an input wasnt found differs from 102 in that a different portion of the netlist is incorrect
+				}
+			}
+			else if(loopCount > 2)
+			{
+				//check inputs and wires
+				if (currop != -1)											//there are only other inputs if the operation isnt a register which isnt determined until the end
+				{
+					in2 = checkForIn(lists, token);
+					if(in2 == NULL)
+					{
+						validCheck = 0;
+						errorCode = 103;									//input wire/input couldnt be found
+					}
+					if(currop == 8)
+					{
+						token = strtok(NULL, " ,\t\n");						//grabs the next string
+						if(strcmp(token,":") != 0)							//if the string isnt a colon then it isnt a correct conditional statement
+						{
+							validCheck = 0;
+							errorCode = 101;								//error 101 implies an incorrect conditional
+						}
+						else												//otherwise continue on and get the third input
+						{
+							token = strtok(NULL, " ,\t\n");
+							in3 = checkForIn(lists, token);
+							if(in3 == NULL)
+							{
+								validCheck = 0;
+								errorCode = 103;							//input wire/input couldnt be found
+							}
+						}
+					}
+				}
+			}
+		}
+		else																//the token is either an operation or an invalid character
+		{
+			if(loopCount == 1)
+			{
+				if(strcmp(token,"=") == 0)
+				{
+					validCheck = 1;
+				}
+			}
+			else if(loopCount == 3)
+			{
+				if(strcmp(token,"+") == 0)										//line is addition
+				{
+					currop = 1;													//current operation is set to addtion
+					lists->opCount[currop]++;									//the number of adders is incrememnted
+					opFound = 1;												//an operation has been found
+				}
+				else if(strcmp(token,"-") == 0)									//line is subtraction
+				{
+					currop = 2;
+					lists->opCount[currop]++;
+					opFound = 1;
+				}
+				else if(strcmp(token,">>") == 0)								//line is right shift
+				{
+					currop = 3;
+					lists->opCount[currop]++;
+					opFound = 1;
+				}
+				else if(strcmp(token,"<<") == 0)								//line is left shift
+				{
+					currop = 4;
+					lists->opCount[currop]++;
+					opFound = 1;
+				}
+				else if(strcmp(token,"<") == 0)									//line is a less than comparison
+				{																//opcount uses COMP because comparators are the same module in verilog but need to be treated differently
+					currop = 5;													//based on what port is needed for a GT,LT, or ET comparison
+					lists->opCount[COMP]++;
+					opFound = 1;
+				}
+				else if(strcmp(token,"==") == 0)								//line is a equal to comparison
+				{
+					currop = 6;
+					lists->opCount[COMP]++;
+					opFound = 1;
+				}
+				else if(strcmp(token,">") == 0)									//line is a greater than comparison
+				{
+					currop = 7;
+					lists->opCount[COMP]++;
+					opFound = 1;
+				}
+				else if(strcmp(token,"?") == 0)									//line is a mux
+				{
+					currop = 8;
+					lists->opCount[MUX]++;										//MUX is defined as 6 to accomodate for 3 types of comparison
+					opFound = 1;
+				}
+				else if(strcmp(token,"*") == 0)									//line is multiplication
+				{
+					currop = 9;
+					lists->opCount[MULT]++;										//MUX is defined as 6 to accomodate for 3 types of comparison
+					opFound = 1;
+				}
+				else															//operation is invalid
+				{
+					currop = -1;
+					validCheck = 0;
+					errorCode = 100;											//error code 100 coresponds to invalid operator
+				}
+			}
+			else																//an operation/reserved character was found outside of the second token meaning the line is invalid
+			{
+				if(loopCount == 5 && currop != 6 && *token != 58 )				//accounts for a mux, if the 6th token isn't a colon then the line is invalid
+				{
+					validCheck = 0;
+					errorCode = 101;											//incorrect conditional statement
+				}
+				else if(loopCount != 5)											//an operator has been found where it shouldnt be
+				{
+					validCheck = 0;
+					errorCode = 100;											//invalid operator
+				}
+			}
+		}
+
+		loopCount++;
+		token = strtok(NULL, " ,\t\n");
+
+	}
+	if(opFound == 0 && validCheck == 1)
+	{
+		currop = 0;																//register operation
+		lists->opCount[currop]++;
+	}
+	printOp(*lists, errorCode, currop, width, in1, in2, in3, out);
+	
+	return;
+}
+
+char* checkForOut(listContainer* lists, char* token)
+{
+	char* out = NULL;
+	varNode* node = lists->wireHead;							//checks wires first
+	out = searchFor(node, token);
+	if (out == NULL)
+	{
+		node = lists->outputHead;								//checks outputs second
+		out = searchFor(node, token);
+		if(out == NULL)
+		{
+			node = lists->regHead;								//checks registers third
+			out = searchFor(node, token);
+		}
+	}
+
+	return out;
+}
+
+char* checkForIn(listContainer* lists, char* token)
+{
+	char* in = NULL;
+	varNode* node = lists->inputHead;
+
+	in = searchFor(node, token);
+	if(in == NULL)
+	{
+		node = lists->wireHead;
+		in = searchFor(node,token);
+	}
+
+	return in;
+}
+
+char* searchFor(varNode* node, char* token)										//function searches through the nodes of a given list to find a name
+{
+	char* out = NULL;															//if out stays NULL then the list did not contain the name
+	int found = 0;
+
+	while (node != NULL && found == 0)
+	{
+		if (strcmp((node->name), token) == 0)
+		{
+			found = 1;
+			out = token;
+		}
+		node = node->next;
+	}
+
+	return out;
+}
+
+int checkWidth(listContainer* lists, char* token)
+{
+	int width = 0;
+	int found = 0;
+	char* match;
+	varNode* node = lists->wireHead;
+	match = searchFor(node, token);
+
+	while (node != NULL && found == 0)						//checks the wires for the output width of the lines output
+	{
+		if (strcmp((node->name), token) == 0)
+		{
+			found = 1;
+			width = node->width;
+			return width;
+		}
+		node = node->next;
+	}
+	node = lists->outputHead;						//checks outputs next
+	while (node != NULL && found == 0)
+	{
+		if (strcmp((node->name), token) == 0)
+		{
+			found = 1;
+			width = node->width;
+			return width;
+		}
+		node = node->next;
+	}
+	node = lists->regHead;							//checks registers last
+	while (node != NULL && found == 0)
+	{
+		if (strcmp((node->name), token) == 0)
+		{
+			found = 1;
+			width = node->width;
+			return width;
+		}
+		node = node->next;							
+	}
+	return -1;												//returns -1 if the node doesn't exist however this is unlikely to occur
+}

@@ -3,5 +3,6 @@
 #include "lists.h"
 
 void beginParsingLine(listContainer* lists, char* parse);
+void endPrint(listContainer lists);
 
 #endif 

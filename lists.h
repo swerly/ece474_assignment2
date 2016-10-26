@@ -18,6 +18,8 @@ typedef struct{
     //0 if header/vars havent been printed, 1 if they have
     int headerAndVarsWritten;
     char* filename;
+
+	int opCount[8];						//an array that tracks the number of times an operation has been used for printing purposes
 } listContainer;
 
 void addToList(varNode** list, varNode* varToAdd);
