@@ -10,7 +10,6 @@
 int main(int argc, char** argv){
     FILE *netlistIn;
     char currentLine[LINE_SIZE];
-    int printedHeaderAndVars = 0;
     
 	int i = 0;
 
