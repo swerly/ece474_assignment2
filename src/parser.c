@@ -23,6 +23,9 @@ char* searchFor(varNode* node, char* token);
 char* checkForOut(listContainer* lists, char* token);
 char* checkForIn(listContainer* lists, char* token);
 int checkWidth(listContainer* lists, char* token);
+int getWidthAndSign(listContainer* lists, char* input1, char* input2, int* inWidth1, int*  inWidth2, int* signedFlag);
+int getOp(listContainer* lists, char* token, int* opFound, int* validCheck, int* errorCode);
+void getRegSignAndWidth(listContainer* lists, char* inputName, int* inWidth1, int* signedFlag);
 
 void beginParsingLine(listContainer* lists, char* line) {
 	char* token;
@@ -164,6 +167,11 @@ void parseCircuitComponent(listContainer* lists, char* componentLine)
 	char* in2 = NULL;
 	char* in3 = NULL;
 	int width = 0;
+	int outWidth = 0;
+	int inWidth1 = 0;
+	int inWidth2 = 0;
+	int holdWidth = 0;														//this width is a dummy variable whos purpose is to store the return value of the width function instead of creating another function
+	int signedFlag = 1;														//flag indicating the operation is signed, high by default
 
 	int loopCount = 0;														//keeps track of the position in the loop for printing purposes
 	int validCheck = 1;														//the line is valid unless the parsing finds an invalid character in which case this flag goes low
@@ -187,6 +195,7 @@ void parseCircuitComponent(listContainer* lists, char* componentLine)
 				else
 				{
 					width = checkWidth(lists, token);
+					outWidth = width;
 				}
 			}
 			else if(loopCount == 2)
@@ -209,6 +218,10 @@ void parseCircuitComponent(listContainer* lists, char* componentLine)
 						validCheck = 0;
 						errorCode = 103;									//input wire/input couldnt be found
 					}
+					if (currop >= 5 && currop <= 7)
+					{
+						width = getWidthAndSign(lists, in1, in2, &inWidth1, &inWidth2, &signedFlag);
+					}
 					if(currop == 8)
 					{
 						token = strtok(NULL, " ,\t\n");						//grabs the next string
@@ -225,8 +238,14 @@ void parseCircuitComponent(listContainer* lists, char* componentLine)
 							{
 								validCheck = 0;
 								errorCode = 103;							//input wire/input couldnt be found
+								break;
 							}
+							holdWidth = getWidthAndSign(lists, in2, in3, &inWidth1, &inWidth2, &signedFlag);
 						}
+					}
+					else
+					{
+						holdWidth = getWidthAndSign(lists, in1, in2, &inWidth1, &inWidth2, &signedFlag);
 					}
 				}
 			}
@@ -242,66 +261,7 @@ void parseCircuitComponent(listContainer* lists, char* componentLine)
 			}
 			else if(loopCount == 3)
 			{
-				if(strcmp(token,"+") == 0)										//line is addition
-				{
-					currop = 1;													//current operation is set to addtion
-					lists->opCount[currop]++;									//the number of adders is incrememnted
-					opFound = 1;												//an operation has been found
-				}
-				else if(strcmp(token,"-") == 0)									//line is subtraction
-				{
-					currop = 2;
-					lists->opCount[currop]++;
-					opFound = 1;
-				}
-				else if(strcmp(token,">>") == 0)								//line is right shift
-				{
-					currop = 3;
-					lists->opCount[currop]++;
-					opFound = 1;
-				}
-				else if(strcmp(token,"<<") == 0)								//line is left shift
-				{
-					currop = 4;
-					lists->opCount[currop]++;
-					opFound = 1;
-				}
-				else if(strcmp(token,"<") == 0)									//line is a less than comparison
-				{																//opcount uses COMP because comparators are the same module in verilog but need to be treated differently
-					currop = 5;													//based on what port is needed for a GT,LT, or ET comparison
-					lists->opCount[COMP]++;
-					opFound = 1;
-				}
-				else if(strcmp(token,"==") == 0)								//line is a equal to comparison
-				{
-					currop = 6;
-					lists->opCount[COMP]++;
-					opFound = 1;
-				}
-				else if(strcmp(token,">") == 0)									//line is a greater than comparison
-				{
-					currop = 7;
-					lists->opCount[COMP]++;
-					opFound = 1;
-				}
-				else if(strcmp(token,"?") == 0)									//line is a mux
-				{
-					currop = 8;
-					lists->opCount[MUX]++;										//MUX is defined as 6 to accomodate for 3 types of comparison
-					opFound = 1;
-				}
-				else if(strcmp(token,"*") == 0)									//line is multiplication
-				{
-					currop = 9;
-					lists->opCount[MULT]++;										//MUX is defined as 6 to accomodate for 3 types of comparison
-					opFound = 1;
-				}
-				else															//operation is invalid
-				{
-					currop = -1;
-					validCheck = 0;
-					errorCode = 100;											//error code 100 coresponds to invalid operator
-				}
+				currop = getOp(lists, token, &opFound, &validCheck, &errorCode);
 			}
 			else																//an operation/reserved character was found outside of the second token meaning the line is invalid
 			{
@@ -326,9 +286,10 @@ void parseCircuitComponent(listContainer* lists, char* componentLine)
 	{
 		currop = 0;																//register operation
 		lists->opCount[currop]++;
+		getRegSignAndWidth(lists, in1, &inWidth1, &signedFlag);
 	}
-	printOp(*lists, errorCode, currop, width, in1, in2, in3, out);
-	
+	printOp(*lists, errorCode, currop, width, inWidth1, inWidth2, outWidth, signedFlag, in1, in2, in3, out);
+
 	return;
 }
 
@@ -425,4 +386,172 @@ int checkWidth(listContainer* lists, char* token)
 		node = node->next;							
 	}
 	return -1;												//returns -1 if the node doesn't exist however this is unlikely to occur
+}
+
+int getWidthAndSign(listContainer* lists, char* input1, char* input2, int* inWidth1, int*  inWidth2, int* signedFlag)//function was repurposed it gets the width for comparators but uses pass by pointer to get the width of the inputs
+{																									//as well
+	int largerWidth = 0;
+	int width1 = 0, width2 = 0;
+	varNode* node = lists->inputHead;
+	int found1 = 0, found2 = 0;
+
+	while(node != NULL && (found1 == 0 || found2 == 0))				//performs the same search for width in the output however comparators are comparing the inputs
+	{																//so the width is dependant on the larger input width for an accurate comparison.
+		if(strcmp(node->name,input1) == 0)
+		{
+			found1 = 1;
+			*inWidth1 = node->width;
+			width1 = node->width;
+			if(node->isSigned == 0)
+			{
+				*signedFlag = 0;
+			}
+		}
+		if(strcmp(node->name,input2) == 0)
+		{
+			found2 = 1;
+			*inWidth2 = node->width;
+			width2 = node->width;
+			if(node->isSigned == 0)
+			{
+				*signedFlag = 0;
+			}
+		}
+		node = node->next;
+	}
+
+	node = lists->wireHead;
+	while(node != NULL && (found1 == 0 || found2 == 0))
+	{
+		if(strcmp(node->name,input1) == 0)
+		{
+			found1 = 1;
+			*inWidth1 = node->width;
+			width1 = node->width;
+			if(node->isSigned == 0)
+			{
+				*signedFlag = 0;
+			}
+		}
+		if(strcmp(node->name,input2) == 0)
+		{
+			found2 = 1;
+			*inWidth2 = node->width;
+			width2 = node->width;
+			if(node->isSigned == 0)
+			{
+				*signedFlag = 0;
+			}
+		}
+		node = node->next;
+	}
+
+	if(width1 >= width2)
+	{
+		largerWidth = width1;
+	}
+	else
+	{
+		largerWidth = width2;
+	}
+
+	return largerWidth;
+}
+
+void getRegSignAndWidth(listContainer* lists, char* inputName, int* inWidth1, int* signedFlag)
+{
+	varNode* node = lists->inputHead;
+
+	while(node != NULL)
+	{
+		if(strcmp(node->name, inputName) == 0)
+		{
+			*inWidth1 = node->width;
+			if(node->isSigned == 0)
+			{
+				*signedFlag = 0;
+			}
+		}
+		node = node->next;
+	}
+
+	node = lists->wireHead;
+	while(node != NULL)
+	{
+		if(strcmp(node->name, inputName) == 0)
+		{
+			*inWidth1 = node->width;
+			if(node->isSigned == 0)
+			{
+				*signedFlag = 0;
+			}
+		}
+		node = node->next;
+	}
+	return;
+}
+int getOp(listContainer* lists, char* token, int* opFound, int* validCheck, int* errorCode)
+{
+	int currop = -1;
+
+	if(strcmp(token,"+") == 0)										//line is addition
+	{
+		currop = 1;													//current operation is set to addtion
+		lists->opCount[currop]++;									//the number of adders is incrememnted
+		*opFound = 1;												//an operation has been found
+	}
+	else if(strcmp(token,"-") == 0)									//line is subtraction
+	{
+		currop = 2;
+		lists->opCount[currop]++;
+		*opFound = 1;
+	}
+	else if(strcmp(token,">>") == 0)								//line is right shift
+	{
+		currop = 3;
+		lists->opCount[currop]++;
+		*opFound = 1;
+	}
+	else if(strcmp(token,"<<") == 0)								//line is left shift
+	{
+		currop = 4;
+		lists->opCount[currop]++;
+		*opFound = 1;
+	}
+	else if(strcmp(token,"<") == 0)									//line is a less than comparison
+	{																//opcount uses COMP because comparators are the same module in verilog but need to be treated differently
+		currop = 5;													//based on what port is needed for a GT,LT, or ET comparison
+		lists->opCount[COMP]++;
+		*opFound = 1;
+	}
+	else if(strcmp(token,"==") == 0)								//line is a equal to comparison
+	{
+		currop = 6;
+		lists->opCount[COMP]++;
+		*opFound = 1;
+	}
+	else if(strcmp(token,">") == 0)									//line is a greater than comparison
+	{
+		currop = 7;
+		lists->opCount[COMP]++;
+		*opFound = 1;
+	}
+	else if(strcmp(token,"?") == 0)									//line is a mux
+	{
+		currop = 8;
+		lists->opCount[MUX]++;										//MUX is defined as 6 to accomodate for 3 types of comparison
+		*opFound = 1;
+	}
+	else if(strcmp(token,"*") == 0)									//line is multiplication
+	{
+		currop = 9;
+		lists->opCount[MULT]++;										//MUX is defined as 6 to accomodate for 3 types of comparison
+		*opFound = 1;
+	}
+	else															//operation is invalid
+	{
+		*validCheck = 0;
+		*errorCode = 100;											//error code 100 coresponds to invalid operator
+	}
+	return currop;
 }

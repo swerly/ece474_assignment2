@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 #include "lists.h"
 #define COMP 5
@@ -130,7 +131,7 @@ void printRegs(FILE* outp, listContainer lists) {
 
 }
 
-void printOp(listContainer lists, int errorCode, int op, int width, char* in1, char* in2, char* in3, char* out)
+void printOp(listContainer lists, int errorCode, int op, int width, int inWidth1, int inWidth2, int outWidth, int signedFlag, char* in1, char* in2, char* in3, char* out)
 {
 	FILE* outp = fopen(lists.filename, "a");
 
@@ -139,37 +140,365 @@ void printOp(listContainer lists, int errorCode, int op, int width, char* in1, c
 		switch (op)
 		{
 			case 0:
-				fprintf(outp,"    REG #(%d) reg_%d(%s, Clk, rst, %s);\n", width, lists.opCount[op], in1, out);
+				if (signedFlag == 1)
+				{
+					if( width == inWidth1)
+					{
+						fprintf(outp,"    SREG #(%d) sreg_%d(%s, Clk, rst, %s);\n", width, lists.opCount[op], in1, out);
+					}
+					else
+					{
+						fprintf(outp,"    SREG #(%d) sreg_%d({{%d{%s[%d]}},%s[%d:0]}, Clk, rst, %s);\n", width, lists.opCount[op], abs(width - inWidth1), in1, (inWidth1 - 1), in1, (inWidth1 - 1), out);
+					}
+				}
+				else
+				{
+					if( width == inWidth1)
+					{
+						fprintf(outp,"    REG #(%d) reg_%d(%s, Clk, rst, %s);\n", width, lists.opCount[op], in1, out);
+					}
+					else
+					{
+						fprintf(outp,"    REG #(%d) reg_%d({{%d'b0},%s[%d:0]}, Clk, rst, %s);\n", width, lists.opCount[op], abs(width - inWidth1), in1, (inWidth1 - 1), out);
+					}
+				}
 				break;
 			case 1:
-				fprintf(outp,"    ADD #(%d) add_%d(%s, %s, %s);\n", width, lists.opCount[op],in1,in2,out);
+				if (signedFlag == 1)
+				{
+					if (width == inWidth1 && width == inWidth2)
+					{
+						fprintf(outp,"    SADD #(%d) sadd_%d(%s, %s, %s);\n", width, lists.opCount[op],in1,in2,out);
+					}
+					else if (width == inWidth1 && width > inWidth2)
+					{
+						fprintf(outp,"    SADD #(%d) sadd_%d(%s, {{%d{%s[%d]}},%s[%d:0]}, %s);\n", width, lists.opCount[op], in1, abs(width - inWidth2), in2, (inWidth2 - 1), in2, (inWidth2 - 1), out);
+					}
+					else if (width > inWidth1 && width == inWidth2)
+					{
+						fprintf(outp,"    SADD #(%d) sadd_%d({{%d{%s[%d]}},%s[%d:0]}, %s, %s);\n", width, lists.opCount[op], abs(width - inWidth1), in1, (inWidth1 - 1), in1, (inWidth1 - 1), in2, out);
+					}
+					else
+					{
+						fprintf(outp,"    SADD #(%d) sadd_%d({{%d{%s[%d]}},%s[%d:0]}, {{%d{%s[%d]}},%s[%d:0]}, %s);\n", width, lists.opCount[op], abs(width - inWidth1), in1, (inWidth1 - 1), in1, (inWidth1 - 1), abs(width - inWidth2), in2, (inWidth2 - 1), in2, (inWidth2 - 1), out);
+					}
+				}
+				else
+				{
+					if (width == inWidth1 && width == inWidth2)
+					{
+						fprintf(outp,"    ADD #(%d) add_%d(%s, %s, %s);\n", width, lists.opCount[op],in1,in2,out);
+					}
+					else if (width == inWidth1 && width > inWidth2)
+					{
+						fprintf(outp,"    ADD #(%d) add_%d(%s, {{%d'b0},%s[%d:0]}, %s);\n", width, lists.opCount[op], in1, abs(width - inWidth2), in2, (inWidth2 - 1), out);
+					}
+					else if (width > inWidth1 && width == inWidth2)
+					{
+						fprintf(outp,"    ADD #(%d) add_%d({{%d'b0},%s[%d:0]}, %s, %s);\n", width, lists.opCount[op], abs(width - inWidth1), in1, (inWidth1 - 1), in2, out);
+					}
+					else
+					{
+						fprintf(outp,"    ADD #(%d) add_%d({{%d'b0},%s[%d:0]}, {{%d'b0}},%s[%d:0]}, %s);\n", width, lists.opCount[op], abs(width - inWidth1), in1, (inWidth1 - 1), abs(width - inWidth2), in2, (inWidth2 - 1), out);
+					}
+				}
+				
 				break;
 			case 2:
-				fprintf(outp,"    SUB #(%d) sub_%d(%s, %s, %s);\n", width, lists.opCount[op],in1,in2,out);
+				if (signedFlag == 1)
+				{
+					if (width == inWidth1 && width == inWidth2)
+					{
+						fprintf(outp,"    SSUB #(%d) ssub_%d(%s, %s, %s);\n", width, lists.opCount[op],in1,in2,out);
+					}
+					else if (width == inWidth1 && width > inWidth2)
+					{
+						fprintf(outp,"    SSUB #(%d) ssub_%d(%s, {{%d{%s[%d]}},%s[%d:0]}, %s);\n", width, lists.opCount[op], in1, abs(width - inWidth2), in2, (inWidth2 - 1), in2, (inWidth2 - 1), out);
+					}
+					else if (width > inWidth1 && width == inWidth2)
+					{
+						fprintf(outp,"    SSUB #(%d) ssub_%d({{%d{%s[%d]}},%s[%d:0]}, %s, %s);\n", width, lists.opCount[op], abs(width - inWidth1), in1, (inWidth1 - 1), in1, (inWidth1 - 1), in2, out);
+					}
+					else
+					{
+						fprintf(outp,"    SSUB #(%d) ssub_%d({{%d{%s[%d]}},%s[%d:0]}, {{%d{%s[%d]}},%s[%d:0]}, %s);\n", width, lists.opCount[op], abs(width - inWidth1), in1, (inWidth1 - 1), in1, (inWidth1 - 1), abs(width - inWidth2), in2, (inWidth2 - 1), in2, (inWidth2 - 1), out);
+					}
+				}
+				else
+				{
+					if (width == inWidth1 && width == inWidth2)
+					{
+						fprintf(outp,"    SUB #(%d) sub_%d(%s, %s, %s);\n", width, lists.opCount[op],in1,in2,out);
+					}
+					else if (width == inWidth1 && width > inWidth2)
+					{
+						fprintf(outp,"    SUB #(%d) sub__%d(%s, {{%d'b0},%s[%d:0]}, %s);\n", width, lists.opCount[op], in1, abs(width - inWidth2), in2, (inWidth2 - 1), out);
+					}
+					else if (width > inWidth1 && width == inWidth2)
+					{
+						fprintf(outp,"    SUB #(%d) sub_%d({{%d'b0},%s[%d:0]}, %s, %s);\n", width, lists.opCount[op], abs(width - inWidth1), in1, (inWidth1 - 1), in2, out);
+					}
+					else
+					{
+						fprintf(outp,"    SUB #(%d) sub_%d({{%d'b0},%s[%d:0]}, {{%d'b0}},%s[%d:0]}, %s);\n", width, lists.opCount[op], abs(width - inWidth1), in1, (inWidth1 - 1), abs(width - inWidth2), in2, (inWidth2 - 1), out);
+					}
+				}
 				break;
 			case 3:
-				fprintf(outp,"    SHR #(%d) shr_%d(%s, %s, %s);\n", width, lists.opCount[op],in1,in2,out);
+				if (signedFlag == 1)
+				{
+					if(width > inWidth1)
+					{
+						fprintf(outp,"    SSHR #(%d) sshr_%d({{%d{%s[%d]}},%s[%d:0]},%s[%d:0]}, %s, %s);\n", width, lists.opCount[op], abs(width - inWidth1), in1, (inWidth1 - 1), in1, (inWidth1 - 1), in2,out);
+					}
+					else
+					{
+						fprintf(outp,"    SSHR #(%d) sshr_%d(%s, %s, %s);\n", width, lists.opCount[op],in1,in2,out);
+					}
+				}
+				else
+				{
+					if(width > inWidth1)
+					{
+						fprintf(outp,"    SHR #(%d) shr_%d({{%d'b0},%s[%d:0]},%s[%d:0]}, %s, %s);\n", width, lists.opCount[op], abs(width - inWidth1), in1, (inWidth1 - 1), in2,out);
+					}
+					else
+					{
+						fprintf(outp,"    SHR #(%d) shr_%d(%s, %s, %s);\n", width, lists.opCount[op],in1,in2,out);
+					}
+				}
+
 				break;
 			case 4:
-				fprintf(outp,"    SHL #(%d) shl_%d(%s, %s, %s);\n", width, lists.opCount[op],in1,in2,out);
+				if (signedFlag == 1)
+				{
+					if(width > inWidth1)
+					{
+						fprintf(outp,"    SSHL #(%d) sshl_%d({{%d{%s[%d]}},%s[%d:0]},%s[%d:0]}, %s, %s);\n", width, lists.opCount[op], abs(width - inWidth1), in1, (inWidth1 - 1), in1, (inWidth1 - 1), in2,out);
+					}
+					else
+					{
+						fprintf(outp,"    SSHL #(%d) sshl_%d(%s, %s, %s);\n", width, lists.opCount[op],in1,in2,out);
+					}
+				}
+				else
+				{
+					if(width > inWidth1)
+					{
+						fprintf(outp,"    SHL #(%d) shl_%d({{%d'b0},%s[%d:0]},%s[%d:0]}, %s, %s);\n", width, lists.opCount[op], abs(width - inWidth1), in1, in1, (inWidth1 - 1), in2,out);
+					}
+					else
+					{
+						fprintf(outp,"    SHL #(%d) shl_%d(%s, %s, %s);\n", width, lists.opCount[op],in1,in2,out);
+					}
+				}
 				break;
 			case 5:
-				fprintf(outp,"    COMP #(%d) cmp_%d(%s, %s, ,%s, );\n", width, lists.opCount[COMP],in1,in2,out);
+				if (signedFlag == 1)
+				{
+					if (width == inWidth1 && width == inWidth2)
+					{
+						fprintf(outp,"    SCOMP #(%d) scomp_%d(%s, %s, ,%s, );\n", width, lists.opCount[COMP],in1,in2,out);
+					}
+					else if (width == inWidth1 && width > inWidth2)
+					{
+						fprintf(outp,"    SCOMP #(%d) scomp_%d(%s, {{%d{%s[%d]}},%s[%d:0]}, ,%s, );\n", width, lists.opCount[COMP], in1, abs(width - inWidth2), in2, (inWidth2 - 1), in2, (inWidth2 - 1), out);
+					}
+					else if (width > inWidth1 && width == inWidth2)
+					{
+						fprintf(outp,"    SCOMP #(%d) scomp_%d({{%d{%s[%d]}},%s[%d:0]}, %s, ,%s, );\n", width, lists.opCount[COMP], abs(width - inWidth1), in1, (inWidth1 - 1), in1, (inWidth1 - 1), in2, out);
+					}
+					else
+					{
+						fprintf(outp,"    SCOMP #(%d) scomp_%d({{%d{%s[%d]}},%s[%d:0]}, {{%d{%s[%d]}},%s[%d:0]}, ,%s, );\n", width, lists.opCount[COMP], abs(width - inWidth1), in1, (inWidth1 - 1), in1, (inWidth1 - 1), abs(width - inWidth2), in2, (inWidth2 - 1), in2, (inWidth2 - 1), out);
+					}
+				}
+				else
+				{
+					if (width == inWidth1 && width == inWidth2)
+					{
+						fprintf(outp,"    COMP #(%d) comp_%d(%s, %s, ,%s, );\n", width, lists.opCount[COMP],in1,in2,out);
+					}
+					else if (width == inWidth1 && width > inWidth2)
+					{
+						fprintf(outp,"    COMP #(%d) comp__%d(%s, {{%d'b0},%s[%d:0]}, ,%s, );\n", width, lists.opCount[COMP], in1, abs(width - inWidth2), in2, (inWidth2 - 1), out);
+					}
+					else if (width > inWidth1 && width == inWidth2)
+					{
+						fprintf(outp,"    COMP #(%d) comp_%d({{%d'b0},%s[%d:0]}, %s, ,%s, );\n", width, lists.opCount[COMP], abs(width - inWidth1), in1, (inWidth1 - 1), in2, out);
+					}
+					else
+					{
+						fprintf(outp,"    COMP #(%d) comp_%d({{%d'b0},%s[%d:0]}, {{%d'b0},%s[%d:0]}, ,%s, );\n", width, lists.opCount[COMP], abs(width - inWidth1), in1, (inWidth1 - 1), abs(width - inWidth2), in2, (inWidth2 - 1), out);
+					}
+				}
 				break;
 			case 6:
-				fprintf(outp,"    COMP #(%d) cmp_%d(%s, %s, , , %s);\n", width, lists.opCount[COMP],in1,in2,out);
+				if (signedFlag == 1)
+				{
+					if (width == inWidth1 && width == inWidth2)
+					{
+						fprintf(outp,"    SCOMP #(%d) scomp_%d(%s, %s, , ,%s);\n", width, lists.opCount[COMP],in1,in2,out);
+					}
+					else if (width == inWidth1 && width > inWidth2)
+					{
+						fprintf(outp,"    SCOMP #(%d) scomp_%d(%s, {{%d{%s[%d]}},%s[%d:0]}, , ,%s);\n", width, lists.opCount[COMP], in1, abs(width - inWidth2), in2, (inWidth2 - 1), in2, (inWidth2 - 1), out);
+					}
+					else if (width > inWidth1 && width == inWidth2)
+					{
+						fprintf(outp,"    SCOMP #(%d) scomp_%d({{%d{%s[%d]}},%s[%d:0]}, %s, , ,%s);\n", width, lists.opCount[COMP], abs(width - inWidth1), in1, (inWidth1 - 1), in1, (inWidth1 - 1), in2, out);
+					}
+					else
+					{
+						fprintf(outp,"    SCOMP #(%d) scomp_%d({{%d{%s[%d]}},%s[%d:0]}, {{%d{%s[%d]}},%s[%d:0]}, , ,%s);\n", width, lists.opCount[COMP], abs(width - inWidth1), in1, (inWidth1 - 1), in1, (inWidth1 - 1), abs(width - inWidth2), in2, (inWidth2 - 1), in2, (inWidth2 - 1), out);
+					}
+				}
+				else
+				{
+					if (width == inWidth1 && width == inWidth2)
+					{
+						fprintf(outp,"    COMP #(%d) comp_%d(%s, %s, , ,%s);\n", width, lists.opCount[COMP],in1,in2,out);
+					}
+					else if (width == inWidth1 && width > inWidth2)
+					{
+						fprintf(outp,"    COMP #(%d) comp__%d(%s, {{%d'b0},%s[%d:0]}, , ,%s);\n", width, lists.opCount[COMP], in1, abs(width - inWidth2), in2, (inWidth2 - 1), out);
+					}
+					else if (width > inWidth1 && width == inWidth2)
+					{
+						fprintf(outp,"    COMP #(%d) comp_%d({{%d'b0},%s[%d:0]}, %s, , ,%s);\n", width, lists.opCount[COMP], abs(width - inWidth1), in1, (inWidth1 - 1), in2, out);
+					}
+					else
+					{
+						fprintf(outp,"    COMP #(%d) comp_%d({{%d'b0},%s[%d:0]}, {{%d'b0},%s[%d:0]}, , ,%s);\n", width, lists.opCount[COMP], abs(width - inWidth1), in1, (inWidth1 - 1), abs(width - inWidth2), in2, (inWidth2 - 1), out);
+					}
+				}
+				
 				break;
 			case 7:
-				fprintf(outp,"    COMP #(%d) cmp_%d(%s, %s, %s, , );\n", width, lists.opCount[COMP],in1,in2,out);
+				if (signedFlag == 1)
+				{
+					if (width == inWidth1 && width == inWidth2)
+					{
+						fprintf(outp,"    SCOMP #(%d) scomp_%d(%s, %s, %s, , );\n", width, lists.opCount[COMP],in1,in2,out);
+					}
+					else if (width == inWidth1 && width > inWidth2)
+					{
+						fprintf(outp,"    SCOMP #(%d) scomp_%d(%s, {{%d{%s[%d]}},%s[%d:0]}, %s, , );\n", width, lists.opCount[COMP], in1, abs(width - inWidth2), in2, (inWidth2 - 1), in2, (inWidth2 - 1), out);
+					}
+					else if (width > inWidth1 && width == inWidth2)
+					{
+						fprintf(outp,"    SCOMP #(%d) scomp_%d({{%d{%s[%d]}},%s[%d:0]}, %s, %s, , );\n", width, lists.opCount[COMP], abs(width - inWidth1), in1, (inWidth1 - 1), in1, (inWidth1 - 1), in2, out);
+					}
+					else
+					{
+						fprintf(outp,"    SCOMP #(%d) scomp_%d({{%d{%s[%d]}},%s[%d:0]}, {{%d{%s[%d]}},%s[%d:0]}, %s, , );\n", width, lists.opCount[COMP], abs(width - inWidth1), in1, (inWidth1 - 1), in1, (inWidth1 - 1), abs(width - inWidth2), in2, (inWidth2 - 1), in2, (inWidth2 - 1), out);
+					}
+				}
+				else
+				{
+					if (width == inWidth1 && width == inWidth2)
+					{
+						fprintf(outp,"    COMP #(%d) comp_%d(%s, %s, %s, , );\n", width, lists.opCount[COMP],in1,in2,out);
+					}
+					else if (width == inWidth1 && width > inWidth2)
+					{
+						fprintf(outp,"    COMP #(%d) comp__%d(%s, {{%d'b0},%s[%d:0]}, %s, , );\n", width, lists.opCount[COMP], in1, abs(width - inWidth2), in2, (inWidth2 - 1), out);
+					}
+					else if (width > inWidth1 && width == inWidth2)
+					{
+						fprintf(outp,"    COMP #(%d) comp_%d({{%d'b0},%s[%d:0]}, %s, %s, , );\n", width, lists.opCount[COMP], abs(width - inWidth1), in1, (inWidth1 - 1), in2, out);
+					}
+					else
+					{
+						fprintf(outp,"    COMP #(%d) comp_%d({{%d'b0},%s[%d:0]}, {{%d'b0}},%s[%d:0]}, %s, , );\n", width, lists.opCount[COMP], abs(width - inWidth1), in1, (inWidth1 - 1), abs(width - inWidth2), in2, (inWidth2 - 1), out);
+					}
+				}
+				
 				break;
 			case 8:
-				fprintf(outp,"    MUX2x1 #(%d) mux_%d(%s, %s, %s, %s);\n", width, lists.opCount[MUX],in2,in3,in1,out);
+				if (signedFlag == 1)
+				{
+					if (width == inWidth1 && width == inWidth2)
+					{
+						fprintf(outp,"    SMUX2x1 #(%d) smux_%d(%s, %s, %s, %s);\n", width, lists.opCount[MUX],in1,in2,in3,out);
+					}
+					else if (width == inWidth1 && width > inWidth2)
+					{
+						fprintf(outp,"    SMUX2x1 #(%d) smux_%d(%s, {{%d{%s[%d]}},%s[%d:0]}, %s, %s);\n", width, lists.opCount[MUX], in1, abs(width - inWidth2), in2, (inWidth2 - 1), in2, (inWidth2 - 1), in3, out);
+					}
+					else if (width > inWidth1 && width == inWidth2)
+					{
+						fprintf(outp,"    SMUX2x1 #(%d) smux_%d({{%d{%s[%d]}},%s[%d:0]}, %s, %s, %s);\n", width, lists.opCount[MUX], abs(width - inWidth1), in1, (inWidth1 - 1), in1, (inWidth1 - 1), in2, in3, out);
+					}
+					else
+					{
+						fprintf(outp,"    SMUX2x1 #(%d) smux_%d({{%d{%s[%d]}},%s[%d:0]}, {{%d{%s[%d]}},%s[%d:0]}, %s, %s);\n", width, lists.opCount[MUX], abs(width - inWidth1), in1, (inWidth1 - 1), in1, (inWidth1 - 1), abs(width - inWidth2), in2, (inWidth2 - 1), in2, (inWidth2 - 1), in3, out);
+					}
+				}
+				else
+				{
+					if (width == inWidth1 && width == inWidth2)
+					{
+						fprintf(outp,"    MUX2x1 #(%d) mux_%d(%s, %s, %s);\n", width, lists.opCount[MUX],in1,in2,out);
+					}
+					else if (width == inWidth1 && width > inWidth2)
+					{
+						fprintf(outp,"    MUX2x1 #(%d) mux_%d(%s, {{%d'b0},%s[%d:0]}, %s);\n", width, lists.opCount[MUX], in1, abs(width - inWidth2), in2, (inWidth2 - 1), out);
+					}
+					else if (width > inWidth1 && width == inWidth2)
+					{
+						fprintf(outp,"    MUX2x1 #(%d) mux_%d({{%d'b0},%s[%d:0]}, %s, %s);\n", width, lists.opCount[MUX], abs(width - inWidth1), in1, (inWidth1 - 1), in2, out);
+					}
+					else
+					{
+						fprintf(outp,"    MUX2x1 #(%d) mux_%d({{%d'b0},%s[%d:0]}, {{%d'b0}},%s[%d:0]}, %s);\n", width, lists.opCount[MUX], abs(width - inWidth1), in1, (inWidth1 - 1), abs(width - inWidth2), in2, (inWidth2 - 1), out);
+					}
+				}
+				//fprintf(outp,"    MUX2x1 #(%d) mux_%d(%s, %s, %s, %s);\n", width, lists.opCount[MUX],in2,in3,in1,out);
 				break;
 			case 9:
-				fprintf(outp,"    MULT #(%d) mult_%d(%s, %s, %s);\n", width, lists.opCount[MUX],in1, in2,out);
+				if (signedFlag == 1)
+				{
+					if (width == inWidth1 && width == inWidth2)
+					{
+						fprintf(outp,"    SMULT #(%d) smult_%d(%s, %s, %s);\n", width, lists.opCount[MULT],in1,in2,out);
+					}
+					else if (width == inWidth1 && width > inWidth2)
+					{
+						fprintf(outp,"    SMULT #(%d) smult_%d(%s, {{%d{%s[%d]}},%s[%d:0]}, %s);\n", width, lists.opCount[MULT], in1, abs(width - inWidth2), in2, (inWidth2 - 1), in2, (inWidth2 - 1), out);
+					}
+					else if (width > inWidth1 && width == inWidth2)
+					{
+						fprintf(outp,"    SMULT #(%d) smult_%d({{%d{%s[%d]}},%s[%d:0]}, %s, %s);\n", width, lists.opCount[MULT], abs(width - inWidth1), in1, (inWidth1 - 1), in1, (inWidth1 - 1), in2, out);
+					}
+					else
+					{
+						fprintf(outp,"    SMULT #(%d) smult_%d({{%d{%s[%d]}},%s[%d:0]}, {{%d{%s[%d]}},%s[%d:0]}, %s);\n", width, lists.opCount[MULT], abs(width - inWidth1), in1, (inWidth1 - 1), in1, (inWidth1 - 1), abs(width - inWidth2), in2, (inWidth2 - 1), in2, (inWidth2 - 1), out);
+					}
+				}
+				else
+				{
+					if (width == inWidth1 && width == inWidth2)
+					{
+						fprintf(outp,"    MULT #(%d) mult_%d(%s, %s, %s);\n", width, lists.opCount[MULT],in1,in2,out);
+					}
+					else if (width == inWidth1 && width > inWidth2)
+					{
+						fprintf(outp,"    MULT #(%d) mult_%d(%s, {{%d'b0},%s[%d:0]}, %s);\n", width, lists.opCount[MULT], in1, abs(width - inWidth2), in2, (inWidth2 - 1), out);
+					}
+					else if (width > inWidth1 && width == inWidth2)
+					{
+						fprintf(outp,"    MULT #(%d) mult_%d({{%d'b0},%s[%d:0]}, %s, %s);\n", width, lists.opCount[MULT], abs(width - inWidth1), in1, (inWidth1 - 1), in2, out);
+					}
+					else
+					{
+						fprintf(outp,"    MULT #(%d) mult_%d({{%d'b0},%s[%d:0]}, {{%d'b0}},%s[%d:0]}, %s);\n", width, lists.opCount[MULT], abs(width - inWidth1), in1, (inWidth1 - 1), abs(width - inWidth2), in2, (inWidth2 - 1), out);
+					}
+				}
+				//fprintf(outp,"    MULT #(%d) mult_%d(%s, %s, %s);\n", width, lists.opCount[MUX],in1, in2,out);
 				break;
 			default:
-				fprintf(outp,"//AN UNEXPECTED ERROR HAS OCCURED");
+				fprintf(outp,"//AN UNEXPECTED ERROR HAS OCCURED\n");
 				break;
 		}
 	}
