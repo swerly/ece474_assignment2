@@ -217,6 +217,7 @@ void parseCircuitComponent(listContainer* lists, char* componentLine)
 					{
 						validCheck = 0;
 						errorCode = 103;									//input wire/input couldnt be found
+						break;
 					}
 					if (currop >= 5 && currop <= 7)
 					{
@@ -229,6 +230,7 @@ void parseCircuitComponent(listContainer* lists, char* componentLine)
 						{
 							validCheck = 0;
 							errorCode = 101;								//error 101 implies an incorrect conditional
+							break;
 						}
 						else												//otherwise continue on and get the third input
 						{
