@@ -164,7 +164,7 @@ void printOp(listContainer lists, int errorCode, int op, int width, int inWidth1
 				}
 				break;
 			case 1:
-				if (signedFlag == 1)
+				/*if (signedFlag == 1)
 				{
 					if (width == inWidth1 && width == inWidth2)
 					{
@@ -182,9 +182,9 @@ void printOp(listContainer lists, int errorCode, int op, int width, int inWidth1
 					{
 						fprintf(outp,"    SADD #(%d) sadd_%d({{%d{%s[%d]}},%s[%d:0]}, {{%d{%s[%d]}},%s[%d:0]}, %s);\n", width, lists.opCount[op], abs(width - inWidth1), in1, (inWidth1 - 1), in1, (inWidth1 - 1), abs(width - inWidth2), in2, (inWidth2 - 1), in2, (inWidth2 - 1), out);
 					}
-				}
-				else
-				{
+				}*/
+				//else
+				//{
 					if (width == inWidth1 && width == inWidth2)
 					{
 						fprintf(outp,"    ADD #(%d) add_%d(%s, %s, %s);\n", width, lists.opCount[op],in1,in2,out);
@@ -201,11 +201,11 @@ void printOp(listContainer lists, int errorCode, int op, int width, int inWidth1
 					{
 						fprintf(outp,"    ADD #(%d) add_%d({{%d'b0},%s[%d:0]}, {{%d'b0}},%s[%d:0]}, %s);\n", width, lists.opCount[op], abs(width - inWidth1), in1, (inWidth1 - 1), abs(width - inWidth2), in2, (inWidth2 - 1), out);
 					}
-				}
+				//}
 				
 				break;
 			case 2:
-				if (signedFlag == 1)
+				/*if (signedFlag == 1)
 				{
 					if (width == inWidth1 && width == inWidth2)
 					{
@@ -223,9 +223,9 @@ void printOp(listContainer lists, int errorCode, int op, int width, int inWidth1
 					{
 						fprintf(outp,"    SSUB #(%d) ssub_%d({{%d{%s[%d]}},%s[%d:0]}, {{%d{%s[%d]}},%s[%d:0]}, %s);\n", width, lists.opCount[op], abs(width - inWidth1), in1, (inWidth1 - 1), in1, (inWidth1 - 1), abs(width - inWidth2), in2, (inWidth2 - 1), in2, (inWidth2 - 1), out);
 					}
-				}
-				else
-				{
+				}*/
+				//else
+				//{
 					if (width == inWidth1 && width == inWidth2)
 					{
 						fprintf(outp,"    SUB #(%d) sub_%d(%s, %s, %s);\n", width, lists.opCount[op],in1,in2,out);
@@ -242,7 +242,7 @@ void printOp(listContainer lists, int errorCode, int op, int width, int inWidth1
 					{
 						fprintf(outp,"    SUB #(%d) sub_%d({{%d'b0},%s[%d:0]}, {{%d'b0}},%s[%d:0]}, %s);\n", width, lists.opCount[op], abs(width - inWidth1), in1, (inWidth1 - 1), abs(width - inWidth2), in2, (inWidth2 - 1), out);
 					}
-				}
+				//}
 				break;
 			case 3:
 				if (signedFlag == 1)
