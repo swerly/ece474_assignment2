@@ -420,38 +420,38 @@ void printOp(listContainer lists, int errorCode, int op, int width, int inWidth1
 				{
 					if (width == inWidth1 && width == inWidth2)
 					{
-						fprintf(outp,"    SMUX2x1 #(%d) smux_%d(%s, %s, %s, %s);\n", width, lists.opCount[MUX],in1,in2,in3,out);
+						fprintf(outp,"    SMUX2x1 #(%d) smux_%d(%s, %s, %s, %s);\n", width, lists.opCount[MUX],in2,in3,in1,out);
 					}
 					else if (width == inWidth1 && width > inWidth2)
 					{
-						fprintf(outp,"    SMUX2x1 #(%d) smux_%d(%s, {{%d{%s[%d]}},%s[%d:0]}, %s, %s);\n", width, lists.opCount[MUX], in1, abs(width - inWidth2), in2, (inWidth2 - 1), in2, (inWidth2 - 1), in3, out);
+						fprintf(outp,"    SMUX2x1 #(%d) smux_%d(%s, {{%d{%s[%d]}},%s[%d:0]}, %s, %s);\n", width, lists.opCount[MUX], in2, abs(width - inWidth2), in3, (inWidth2 - 1), in3, (inWidth2 - 1), in1, out);
 					}
 					else if (width > inWidth1 && width == inWidth2)
 					{
-						fprintf(outp,"    SMUX2x1 #(%d) smux_%d({{%d{%s[%d]}},%s[%d:0]}, %s, %s, %s);\n", width, lists.opCount[MUX], abs(width - inWidth1), in1, (inWidth1 - 1), in1, (inWidth1 - 1), in2, in3, out);
+						fprintf(outp,"    SMUX2x1 #(%d) smux_%d({{%d{%s[%d]}},%s[%d:0]}, %s, %s, %s);\n", width, lists.opCount[MUX], abs(width - inWidth1), in2, (inWidth1 - 1), in2, (inWidth1 - 1), in3, in1, out);
 					}
 					else
 					{
-						fprintf(outp,"    SMUX2x1 #(%d) smux_%d({{%d{%s[%d]}},%s[%d:0]}, {{%d{%s[%d]}},%s[%d:0]}, %s, %s);\n", width, lists.opCount[MUX], abs(width - inWidth1), in1, (inWidth1 - 1), in1, (inWidth1 - 1), abs(width - inWidth2), in2, (inWidth2 - 1), in2, (inWidth2 - 1), in3, out);
+						fprintf(outp,"    SMUX2x1 #(%d) smux_%d({{%d{%s[%d]}},%s[%d:0]}, {{%d{%s[%d]}},%s[%d:0]}, %s, %s);\n", width, lists.opCount[MUX], abs(width - inWidth1), in2, (inWidth1 - 1), in2, (inWidth1 - 1), abs(width - inWidth2), in3, (inWidth2 - 1), in3, (inWidth2 - 1), in1, out);
 					}
 				}
 				else
 				{
 					if (width == inWidth1 && width == inWidth2)
 					{
-						fprintf(outp,"    MUX2x1 #(%d) mux_%d(%s, %s, %s);\n", width, lists.opCount[MUX],in1,in2,out);
+						fprintf(outp,"    MUX2x1 #(%d) mux_%d(%s, %s, %s, %s);\n", width, lists.opCount[MUX],in2,in3,in1,out);
 					}
 					else if (width == inWidth1 && width > inWidth2)
 					{
-						fprintf(outp,"    MUX2x1 #(%d) mux_%d(%s, {{%d'b0},%s[%d:0]}, %s);\n", width, lists.opCount[MUX], in1, abs(width - inWidth2), in2, (inWidth2 - 1), out);
+						fprintf(outp,"    MUX2x1 #(%d) mux_%d(%s, {{%d'b0},%s[%d:0]}, %s, %s);\n", width, lists.opCount[MUX], in2, abs(width - inWidth2), in3, (inWidth2 - 1), in1, out);
 					}
 					else if (width > inWidth1 && width == inWidth2)
 					{
-						fprintf(outp,"    MUX2x1 #(%d) mux_%d({{%d'b0},%s[%d:0]}, %s, %s);\n", width, lists.opCount[MUX], abs(width - inWidth1), in1, (inWidth1 - 1), in2, out);
+						fprintf(outp,"    MUX2x1 #(%d) mux_%d({{%d'b0},%s[%d:0]}, %s, %s, %s);\n", width, lists.opCount[MUX], abs(width - inWidth1), in2, (inWidth1 - 1), in3, in1, out);
 					}
 					else
 					{
-						fprintf(outp,"    MUX2x1 #(%d) mux_%d({{%d'b0},%s[%d:0]}, {{%d'b0}},%s[%d:0]}, %s);\n", width, lists.opCount[MUX], abs(width - inWidth1), in1, (inWidth1 - 1), abs(width - inWidth2), in2, (inWidth2 - 1), out);
+						fprintf(outp,"    MUX2x1 #(%d) mux_%d({{%d'b0},%s[%d:0]}, {{%d'b0}},%s[%d:0]}, %s, %s);\n", width, lists.opCount[MUX], abs(width - inWidth1), in2, (inWidth1 - 1), abs(width - inWidth2), in3, (inWidth2 - 1),in1, out);
 					}
 				}
 				//fprintf(outp,"    MUX2x1 #(%d) mux_%d(%s, %s, %s, %s);\n", width, lists.opCount[MUX],in2,in3,in1,out);
