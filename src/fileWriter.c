@@ -249,22 +249,22 @@ void printOp(listContainer lists, int errorCode, int op, int width, int inWidth1
 				{
 					if(width > inWidth1)
 					{
-						fprintf(outp,"    SSHR #(%d) sshr_%d({{%d{%s[%d]}},%s[%d:0]}, %s, %s);\n", width, lists.opCount[op], abs(width - inWidth1), in1, (inWidth1 - 1), in1, (inWidth1 - 1), in2,out);
+						fprintf(outp,"    SSHR #(%d) sshr_%d({{%d{%s[%d]},%s[%d:0]}, {{%d{%s[%d]},%s}, %s);\n", width, lists.opCount[op], abs(width - inWidth1), in1, (inWidth1 - 1), in1, (inWidth1 - 1), abs(width - inWidth2), in2, (inWidth2 - 1), in2, out);
 					}
 					else
 					{
-						fprintf(outp,"    SSHR #(%d) sshr_%d(%s, %s, %s);\n", width, lists.opCount[op],in1,in2,out);
+						fprintf(outp,"    SSHR #(%d) sshr_%d(%s, {{%d'b0},%s}, %s);\n", width, lists.opCount[op],in1,abs(width - inWidth2), in2,out);
 					}
 				}
 				else
 				{
 					if(width > inWidth1)
 					{
-						fprintf(outp,"    SHR #(%d) shr_%d({{%d'b0},%s[%d:0]}, %s, %s);\n", width, lists.opCount[op], abs(width - inWidth1), in1, (inWidth1 - 1), in2,out);
+						fprintf(outp,"    SHR #(%d) shr_%d({{%d'b0},%s[%d:0]}, {{%d'b0},%s}, %s);\n", width, lists.opCount[op], abs(width - inWidth1), in1, (inWidth1 - 1), abs(width - inWidth2), in2, out);
 					}
 					else
 					{
-						fprintf(outp,"    SHR #(%d) shr_%d(%s, %s, %s);\n", width, lists.opCount[op],in1,in2,out);
+						fprintf(outp,"    SHR #(%d) shr_%d(%s, {{%d'b0},%s}, %s);\n", width, lists.opCount[op],in1,abs(width - inWidth2), in2,out);
 					}
 				}
 
@@ -274,22 +274,22 @@ void printOp(listContainer lists, int errorCode, int op, int width, int inWidth1
 				{
 					if(width > inWidth1)
 					{
-						fprintf(outp,"    SHL #(%d) shl_%d({{%d{%s[%d]}},%s[%d:0]},%s[%d:0]}, %s, %s);\n", width, lists.opCount[op], abs(width - inWidth1), in1, (inWidth1 - 1), in1, (inWidth1 - 1), in2,out);
+						fprintf(outp,"    SHL #(%d) shl_%d({{%d{%s[%d]},%s[%d:0]},  {{%d'b0},%s}, %s);\n", width, lists.opCount[op], abs(width - inWidth1), in1, (inWidth1 - 1), in1, (inWidth1 - 1), abs(width - inWidth2), in2, out);
 					}
 					else
 					{
-						fprintf(outp,"    SHL #(%d) shl_%d(%s, %s, %s);\n", width, lists.opCount[op],in1,in2,out);
+						fprintf(outp,"    SHL #(%d) shl_%d(%s, {{%d'b0},%s}, %s);\n", width, lists.opCount[op],in1,abs(width - inWidth2), in2,out);
 					}
 				}
 				else
 				{
-					if(width > inWidth1)
+					if(width > inWidth1 || width > inWidth2)
 					{
-						fprintf(outp,"    SHL #(%d) shl_%d({{%d'b0},%s[%d:0]},%s[%d:0]}, %s, %s);\n", width, lists.opCount[op], abs(width - inWidth1), in1, in1, (inWidth1 - 1), in2,out);
+						fprintf(outp,"    SHL #(%d) shl_%d({{%d'b0},%s[%d:0]}, {{%d'b0},%s}, %s);\n", width, lists.opCount[op], abs(width - inWidth1), in1, in1, (inWidth1 - 1), abs(width - inWidth2), in2,out);
 					}
 					else
 					{
-						fprintf(outp,"    SHL #(%d) shl_%d(%s, %s, %s);\n", width, lists.opCount[op],in1,in2,out);
+						fprintf(outp,"    SHL #(%d) shl_%d(%s, {{%d'b0},%s}, %s);\n", width, lists.opCount[op],in1,abs(width - inWidth2), in2,out);
 					}
 				}
 				break;
