@@ -9,6 +9,6 @@ module m3( Clk, rst, a, b, c );
 
     wire signed [7:0] cwire;
 
-    ADD #(8) add_1({{24'b0},a[31:0]}, {{8'b0}},b[15:0]}, cwire);
-    SREG #(8) sreg_1(cwire, Clk, rst, c);
+    ADD #(8) add_1({{24'b0},a[31:0]}, {{8'b0},b[15:0]}, cwire);
+    REG #(8) reg_1(cwire, Clk, rst, c);
 endmodule

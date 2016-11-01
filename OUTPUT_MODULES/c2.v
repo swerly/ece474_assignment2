@@ -15,10 +15,10 @@ module c2( Clk, rst, a, b, c, z, x );
     SUB #(32) sub_1(a, b, f);
     SCOMP #(32) scomp_1(d, e, , ,dEQe);
     SCOMP #(32) scomp_2(d, e, ,dLTe, );
-    SMUX2x1 #(32) smux_1(d, e, dLTe, g);
-    SMUX2x1 #(32) smux_2(g, f, dEQe, h);
-    SSHL #(32) sshl_1(g, dLTe, xwire);
+    MUX2x1 #(32) mux_1(d, e, dLTe, g);
+    MUX2x1 #(32) mux_2(g, f, dEQe, h);
+    SHL #(32) shl_1(g, dLTe, xwire);
     SSHR #(32) sshr_1(h, dEQe, zwire);
-    SREG #(32) sreg_1(xwire, Clk, rst, x);
-    SREG #(32) sreg_2(zwire, Clk, rst, z);
+    REG #(32) reg_1(xwire, Clk, rst, x);
+    REG #(32) reg_2(zwire, Clk, rst, z);
 endmodule

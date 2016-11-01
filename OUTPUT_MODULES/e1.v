@@ -13,8 +13,8 @@ module e1( Clk, rst, a, b, c, z, x );
 //INVALID OPERATOR IN NETLIST
     ADD #(8) add_1(a, c, e);
     SCOMP #(8) scomp_1(d, e, g, , );
-    SMUX2x1 #(8) smux_1(d, e, g, z);
-    SMULT #(16) smult_1({{8{a[7]}},a[7:0]}, {{8{c[7]}},c[7:0]}, f);
+    MUX2x1 #(8) mux_1(d, e, g, z);
+    MUL #(16) mult_1({{8{a[7]}},a[7:0]}, {{8{c[7]}},c[7:0]}, f);
     SUB #(16) sub__1(f, {{8'b0},d[7:0]}, xwire);
-    SREG #(16) sreg_1(xwire, Clk, rst, x);
+    REG #(16) reg_1(xwire, Clk, rst, x);
 endmodule

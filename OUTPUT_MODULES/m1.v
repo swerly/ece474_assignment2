@@ -10,5 +10,5 @@ module m1( Clk, rst, a, b, c );
     wire signed [7:0] cwire;
 
     ADD #(8) add_1(a, b, cwire);
-    SREG #(8) sreg_1(cwire, Clk, rst, c);
+    REG #(8) reg_1(cwire, Clk, rst, c);
 endmodule

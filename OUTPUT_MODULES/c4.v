@@ -8,7 +8,7 @@ module c4( Clk, rst, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, final );
 
     wire signed [31:0] t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14;
 
-    ADD #(32) add_1({{24'b0},a[7:0]}, {{24'b0}},b[7:0]}, t1);
+    ADD #(32) add_1({{24'b0},a[7:0]}, {{24'b0},b[7:0]}, t1);
     ADD #(32) add_2(t1, {{24'b0},c[7:0]}, t2);
     ADD #(32) add_3(t2, {{24'b0},d[7:0]}, t3);
     ADD #(32) add_4(t3, {{24'b0},e[7:0]}, t4);
@@ -22,5 +22,5 @@ module c4( Clk, rst, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, final );
     ADD #(32) add_12(t11, {{24'b0},n[7:0]}, t12);
     ADD #(32) add_13(t12, {{24'b0},o[7:0]}, t13);
     ADD #(32) add_14(t13, {{24'b0},p[7:0]}, t14);
-    SREG #(32) sreg_1(t14, Clk, rst, final);
+    REG #(32) reg_1(t14, Clk, rst, final);
 endmodule
